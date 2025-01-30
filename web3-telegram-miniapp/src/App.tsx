@@ -39,39 +39,29 @@ const App = () => {
         walletProvider = window.ethereum;
         await walletProvider.request({ method: "eth_requestAccounts" });
       } else {
-        console.log("🔍 Using WalletConnect for Mobile...");
         const wcProvider = await EthereumProvider.init({
           projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // Your WalletConnect Project ID
           chains: [0x86], // Bellecour Chain ID
-          rpcMap: {
-            0x86: "https://bellecour.iex.ec", // Bellecour RPC URL
-          },
-          showQrModal: false, // Hide WalletConnect QR modal inside Telegram WebView
-          logger: "debug", // Enable debugging
+          rpcMap: { 0x86: "https://bellecour.iex.ec" },
+          showQrModal: false,
+          logger: "debug",
         });
 
-
+        // Store URI manually when it's generated
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
           walletConnectURI = uri;
-          console.log("🚀 WalletConnect URI Generated:", uri);
+          console.log("🚀 WalletConnect URI Generated:", walletConnectURI);
+
+          // 🚀 Force MetaMask to open using deep link
+          const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(walletConnectURI)}`;
+          console.log("Opening MetaMask:", metamaskURL);
+          setTimeout(() => {
+            window.location.href = metamaskURL;
+          }, 1000);
         });
 
         await wcProvider.connect();
-        alert("WalletConnect Session Started! ✅");
-        if (walletConnectURI) {
-          const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(walletConnectURI)}`;
-          console.log("Opening MetaMask:", metamaskURL);
-
-          setTimeout(() => {
-            alert("Opening MetaMask via: " + metamaskURL);
-            window.location.href = metamaskURL;
-          }, 1000);
-        } else {
-          throw new Error("❌ WalletConnect URI not generated. Please try again.");
-        }
-
-        walletProvider = wcProvider;
       }
 
       const iexecDataProtector = new IExecDataProtector(walletProvider);
