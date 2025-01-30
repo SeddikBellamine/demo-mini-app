@@ -2,6 +2,7 @@ import { IExecDataProtector } from "@iexec/dataprotector";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { useEffect, useState } from "react";
 
+const CHAIN_ID = 0x86; // Bellecour Chain ID
 
 declare global {
   interface Window {
@@ -13,7 +14,7 @@ declare global {
         initDataUnsafe: unknown;
       };
     };
-    ethereum?: any; // For MetaMask Browser Extension
+    ethereum?: any;
   }
 }
 
@@ -29,57 +30,57 @@ const App = () => {
 
   const protectData = async () => {
     try {
-      console.log("🔍 Protect Data function started...");
+      setErrorMessage(null); // Reset error message
+      console.log("🔍 Initializing WalletConnect...");
 
-      setErrorMessage(null); // Reset errors before starting
-      let walletProvider;
+      const wcProvider = await EthereumProvider.init({
+        projectId: "b2e4ce8c8c62a7815f1b264f625182dd",
+        chains: [CHAIN_ID],
+        rpcMap: { [CHAIN_ID]: "https://bellecour.iex.ec" },
+        showQrModal: false,
+        logger: "debug",
+      });
 
-      if (window.ethereum) {
-        console.log("🔍 Using MetaMask Extension...");
-        walletProvider = window.ethereum;
-        await walletProvider.request({ method: "eth_requestAccounts" });
+      let walletConnectURI = "";
+      let uriGenerated = false;
+
+      wcProvider.on("display_uri", (uri) => {
+        walletConnectURI = uri;
+        uriGenerated = true;
+        console.log("🚀 WalletConnect URI Generated:", walletConnectURI);
+      });
+
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("❌ WalletConnect session timed out!")), 15000)
+      );
+
+      await Promise.race([wcProvider.connect(), timeout]);
+
+      if (uriGenerated) {
+        const metamaskURL = `wc:${encodeURIComponent(walletConnectURI)}`;
+        console.log("🔗 Opening MetaMask with WalletConnect:", metamaskURL);
+        window.location.href = metamaskURL;
       } else {
-        const wcProvider = await EthereumProvider.init({
-          projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // Your WalletConnect Project ID
-          chains: [0x86], // Bellecour Chain ID
-          rpcMap: { 0x86: "https://bellecour.iex.ec" },
-          showQrModal: false,
-          logger: "debug",
-        });
-
-        // Store URI manually when it's generated
-        let walletConnectURI = "";
-        wcProvider.on("display_uri", (uri) => {
-          walletConnectURI = uri;
-          console.log("🚀 WalletConnect URI Generated:", walletConnectURI);
-
-          // 🚀 Force MetaMask to open using deep link
-          const metamaskURL = `wc:${encodeURIComponent(walletConnectURI)}`;
-          alert(`${metamaskURL}`);
-          setTimeout(() => {
-            window.location.href = metamaskURL;
-          }, 1000);
-        });
-
-        await wcProvider.connect();
+        throw new Error("❌ No WalletConnect URI generated.");
       }
 
-      const iexecDataProtector = new IExecDataProtector(walletProvider);
-      console.log("🔄 Initiating data protection...");
+      const iexecDataProtector = new IExecDataProtector(wcProvider);
 
+      console.log("🔄 Initiating data protection...");
       const dataToProtect = {
         email: "user@example.com", // Replace with actual data
         telegramId: "12345678", // Example Telegram user ID
       };
 
-      const { transactionHash } = await iexecDataProtector.core.protectData({ data: dataToProtect });
+      const { transactionHash } = await iexecDataProtector.core.protectData({
+        data: dataToProtect,
+      });
 
       console.log("✅ Data protected successfully:", transactionHash);
       setProtectedData(transactionHash);
     } catch (error) {
-      const message = (error as Error).message || "Unknown error occurred.";
-      console.error("❌ Data Protection Error:", error);
-      setErrorMessage(message);
+      console.error("❌ Error during protectData process:", error);
+      setErrorMessage((error as Error).message || "Unknown error occurred.");
     }
   };
 
@@ -95,7 +96,6 @@ const App = () => {
           ✅ Protected Data Hash: {protectedData}
         </p>
       )}
-
       {errorMessage && (
         <p style={{ color: "red", fontWeight: "bold" }}>
           ❌ Error: {errorMessage}
