@@ -84,7 +84,7 @@ const App = () => {
       setProtectedData(transactionHash);
     } catch (error) {
       console.error("❌ Data Protection Error:", error);
-      alert("Error: " + error.message);
+      alert("Error: " + (error as Error).message);
     }
   };
 
