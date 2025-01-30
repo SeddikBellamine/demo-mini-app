@@ -20,6 +20,7 @@ declare global {
 
 const App = () => {
   const [protectedData, setProtectedData] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
@@ -29,41 +30,38 @@ const App = () => {
 
   const protectData = async () => {
     try {
+      setErrorMessage(null); // Reset errors before starting
       let walletProvider;
 
       if (window.ethereum) {
-        // 🚀 Use MetaMask Extension for Telegram Web
-        console.log("Using MetaMask Extension...");
+        console.log("🔍 Using MetaMask Extension...");
         walletProvider = window.ethereum;
         await walletProvider.request({ method: "eth_requestAccounts" });
       } else {
-        // 🚀 Use WalletConnect for Telegram Mobile
-        console.log("Using WalletConnect for Mobile...");
+        console.log("🔍 Using WalletConnect for Mobile...");
         const wcProvider = await EthereumProvider.init({
-          projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // Your WalletConnect Project ID
+          projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // WalletConnect Project ID
           chains: [CHAIN_ID],
-          showQrModal: false, // Hide WalletConnect QR modal in Telegram WebView
+          showQrModal: false, // Hide WalletConnect QR modal inside Telegram WebView
         });
 
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
           walletConnectURI = uri;
-          console.log("WalletConnect URI:", uri);
+          console.log("🚀 WalletConnect URI Generated:", uri);
         });
 
         await wcProvider.connect();
 
         if (walletConnectURI) {
-          // 🚀 Open MetaMask using deep link
           const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(walletConnectURI)}`;
           console.log("Opening MetaMask:", metamaskURL);
 
-          // Delay opening to avoid Telegram WebView blocking
           setTimeout(() => {
-            window.location.href = metamaskURL;
+            window.open(metamaskURL, "_blank");
           }, 1000);
         } else {
-          console.error("❌ WalletConnect URI not generated");
+          throw new Error("❌ WalletConnect URI not generated. Please try again.");
         }
 
         walletProvider = wcProvider;
@@ -77,17 +75,16 @@ const App = () => {
         telegramId: "12345678", // Example Telegram user ID
       };
 
-      // 🚀 Requires four signing steps (Smart contract + EIP-712 signatures)
       const { transactionHash } = await iexecDataProtector.core.protectData({ data: dataToProtect });
 
       console.log("✅ Data protected successfully:", transactionHash);
       setProtectedData(transactionHash);
     } catch (error) {
+      const message = (error as Error).message || "Unknown error occurred.";
       console.error("❌ Data Protection Error:", error);
-      alert("Error: " + (error as Error).message);
+      setErrorMessage(message);
     }
   };
-
 
   return (
     <div className="container">
@@ -95,7 +92,18 @@ const App = () => {
       <p>Protect your data on iExec using MetaMask!</p>
 
       <button onClick={protectData}>Protect My Data</button>
-      {protectedData && <p>Protected Data Hash: {protectedData}</p>}
+
+      {protectedData && (
+        <p style={{ color: "green" }}>
+          ✅ Protected Data Hash: {protectedData}
+        </p>
+      )}
+
+      {errorMessage && (
+        <p style={{ color: "red", fontWeight: "bold" }}>
+          ❌ Error: {errorMessage}
+        </p>
+      )}
     </div>
   );
 };
