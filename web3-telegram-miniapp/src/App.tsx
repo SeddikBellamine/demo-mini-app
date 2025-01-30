@@ -2,7 +2,6 @@ import { IExecDataProtector } from "@iexec/dataprotector";
 import { EthereumProvider } from "@walletconnect/ethereum-provider";
 import { useEffect, useState } from "react";
 
-const CHAIN_ID = 134; // Bellecour Chain ID
 
 declare global {
   interface Window {
