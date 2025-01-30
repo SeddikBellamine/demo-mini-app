@@ -30,7 +30,6 @@ const App = () => {
 
   const protectData = async () => {
     try {
-      alert("Protect Data Clicked! 🚀");
       console.log("🔍 Protect Data function started...");
 
       setErrorMessage(null); // Reset errors before starting
@@ -51,7 +50,7 @@ const App = () => {
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
           walletConnectURI = uri;
-          //alert(`WalletConnect URI Generated! 📡: ${uri}`);
+          alert(`WalletConnect URI Generated! 📡: ${uri}`);
           console.log("🚀 WalletConnect URI Generated:", uri);
         });
 
