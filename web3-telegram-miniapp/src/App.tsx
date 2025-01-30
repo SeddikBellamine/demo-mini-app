@@ -61,7 +61,8 @@ const App = () => {
           console.log("Opening MetaMask:", metamaskURL);
 
           setTimeout(() => {
-            window.open(metamaskURL, "_blank");
+            alert("Opening MetaMask via: " + metamaskURL);
+            window.location.href = metamaskURL;
           }, 1000);
         } else {
           throw new Error("❌ WalletConnect URI not generated. Please try again.");
