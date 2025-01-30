@@ -54,7 +54,7 @@ const App = () => {
           console.log("🚀 WalletConnect URI Generated:", walletConnectURI);
 
           // 🚀 Force MetaMask to open using deep link
-          const metamaskURL = `ethereum:${encodeURIComponent(walletConnectURI)}`;
+          const metamaskURL = `wc:${encodeURIComponent(walletConnectURI)}`;
           alert(`${metamaskURL}`);
           setTimeout(() => {
             window.location.href = metamaskURL;
