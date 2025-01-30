@@ -51,7 +51,7 @@ const App = () => {
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
           walletConnectURI = uri;
-          alert(`WalletConnect URI Generated! 📡: ${uri}`);
+          //alert(`WalletConnect URI Generated! 📡: ${uri}`);
           console.log("🚀 WalletConnect URI Generated:", uri);
         });
 
