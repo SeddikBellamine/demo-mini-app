@@ -32,7 +32,7 @@ const App = () => {
       let walletProvider;
 
       if (window.ethereum) {
-        // 🚀 Use MetaMask Browser Extension for Telegram Web
+        // 🚀 Use MetaMask Extension for Telegram Web
         console.log("Using MetaMask Extension...");
         walletProvider = window.ethereum;
         await walletProvider.request({ method: "eth_requestAccounts" });
@@ -42,18 +42,30 @@ const App = () => {
         const wcProvider = await EthereumProvider.init({
           projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // Your WalletConnect Project ID
           chains: [CHAIN_ID],
-          showQrModal: false, // Hide WalletConnect QR modal inside Telegram WebView
+          showQrModal: false, // Hide WalletConnect QR modal in Telegram WebView
         });
 
+        let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
+          walletConnectURI = uri;
           console.log("WalletConnect URI:", uri);
-          const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
-          setTimeout(() => {
-            window.open(metamaskURL, "_blank"); // 🚀 Force MetaMask to open
-          }, 1000);
         });
 
         await wcProvider.connect();
+
+        if (walletConnectURI) {
+          // 🚀 Open MetaMask using deep link
+          const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(walletConnectURI)}`;
+          console.log("Opening MetaMask:", metamaskURL);
+
+          // Delay opening to avoid Telegram WebView blocking
+          setTimeout(() => {
+            window.location.href = metamaskURL;
+          }, 1000);
+        } else {
+          console.error("❌ WalletConnect URI not generated");
+        }
+
         walletProvider = wcProvider;
       }
 
@@ -72,8 +84,10 @@ const App = () => {
       setProtectedData(transactionHash);
     } catch (error) {
       console.error("❌ Data Protection Error:", error);
+      alert("Error: " + error.message);
     }
   };
+
 
   return (
     <div className="container">
