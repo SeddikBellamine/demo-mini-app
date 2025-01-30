@@ -42,10 +42,15 @@ const App = () => {
       } else {
         console.log("🔍 Using WalletConnect for Mobile...");
         const wcProvider = await EthereumProvider.init({
-          projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // WalletConnect Project ID
-          chains: [CHAIN_ID],
+          projectId: "b2e4ce8c8c62a7815f1b264f625182dd", // Your WalletConnect Project ID
+          chains: [0x86], // Bellecour Chain ID
+          rpcMap: {
+            0x86: "https://bellecour.iex.ec", // Bellecour RPC URL
+          },
           showQrModal: false, // Hide WalletConnect QR modal inside Telegram WebView
+          logger: "debug", // Enable debugging
         });
+
 
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
