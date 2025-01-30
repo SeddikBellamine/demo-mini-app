@@ -50,12 +50,11 @@ const App = () => {
         let walletConnectURI = "";
         wcProvider.on("display_uri", (uri) => {
           walletConnectURI = uri;
-          alert(`WalletConnect URI Generated! 📡: ${uri}`);
           console.log("🚀 WalletConnect URI Generated:", uri);
         });
 
         await wcProvider.connect();
-
+        alert("WalletConnect Session Started! ✅");
         if (walletConnectURI) {
           const metamaskURL = `https://metamask.app.link/wc?uri=${encodeURIComponent(walletConnectURI)}`;
           console.log("Opening MetaMask:", metamaskURL);
